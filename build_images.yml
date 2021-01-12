@@ -19,14 +19,14 @@ phases:
   build:
     commands:
       - |
-          if [ -z ${ARCH+x} ]; then
+          if [ -z ${ARCH+x} ]; then amazon-linux-extras enable python3.8
             docker build -t python:${IMAGE_TAG} -f Dockerfile${VERSION:+.$VERSION} .
             docker tag python:${IMAGE_TAG} ${REGISTRY_URI}python:${IMAGE_TAG}
             docker tag python:${IMAGE_TAG} ${REGISTRY_URI}python:${IMAGE_TAG}-amd64
             docker push ${REGISTRY_URI}python:${IMAGE_TAG}
             docker push ${REGISTRY_URI}python:${IMAGE_TAG}-amd64
           else
-            docker build --build-arg ARCH="-${ARCH}" -t python:${IMAGE_TAG}-${ARCH} -f Dockerfile${$VERSION:+.$VERSION} .
+            docker build --build-arg ARCH="-${ARCH}" -t python:${IMAGE_TAG}-${ARCH} -f Dockerfile${VERSION:+.$VERSION} .
             docker tag python:${IMAGE_TAG}-${ARCH} ${REGISTRY_URI}python:${IMAGE_TAG}-${ARCH}
             docker push ${REGISTRY_URI}python:${IMAGE_TAG}-${ARCH}
           fi
