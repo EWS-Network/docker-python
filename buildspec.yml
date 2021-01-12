@@ -5,6 +5,7 @@ env:
   variables:
     USE_EPOCH: 1
     PUBLIC_REGISTRY: public.ecr.aws/i9v7p2w3
+    DOCKER_CLI_EXPERIMENTAL: enabled
 
 batch:
   fast-fail: false
@@ -40,7 +41,7 @@ phases:
       - REGISTRY_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION:-$AWS_DEFAULT_REGION}.amazonaws.com/
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${REGISTRY_URI}
       - aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${PUBLIC_REGISTRY}
-      - COMMIT_HASH=${CODEBUILD_RESOLVED_SOURCE_VERSION::7}
+      - if ! [ -z ${CODEBUILD_RESOLVED_SOURCE_VERSION+x} ]; then COMMIT_HASH=${CODEBUILD_RESOLVED_SOURCE_VERSION::7}; fi
       - EPOCH=`date +'%Y-%m-%d'`
       - IMAGE_TAG=${COMMIT_HASH:=$EPOCH}
       - if [ $USE_EPOCH -eq 1 ]; then IMAGE_TAG=$EPOCH; fi
@@ -49,16 +50,18 @@ phases:
     commands:
       - |
           for ARCH in "" "-amd64" "-arm64v8"; do
-            docker pull ${REGISTRY_URI}python:${IMAGE_TAG}${ARCH}
-            docker tag ${REGISTRY_URI}python:${IMAGE_TAG}-${ARCH} ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}${ARCH}
-            docker push ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}${ARCH}
+            echo Publish from {REGISTRY_URI}python:${IMAGE_TAG}${ARCH} to ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}${ARCH};
+            docker pull ${REGISTRY_URI}python:${IMAGE_TAG}${ARCH}     ;
+            docker tag  ${REGISTRY_URI}python:${IMAGE_TAG}${ARCH} \
+                        ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}${ARCH} ;
+            docker push ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}${ARCH} ;
           done
 
       - |
-          docker manifest create ${PUBLIC_REGISTRY}/python:latest \
-          --amend ${REGISTRY_URI}python:${IMAGE_TAG}              \
-          --amend ${REGISTRY_URI}python:${IMAGE_TAG}-amd64        \
-          --amend ${REGISTRY_URI}python:${IMAGE_TAG}-arm64v8
-      - docker manifest push {PUBLIC_REGISTRY}/python:${IMAGE_TAG}
+          docker manifest create ${PUBLIC_REGISTRY}/python:${IMAGE_TAG} \
+          --amend ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}                \
+          --amend ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}-amd64          \
+          --amend ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}-arm64v8
+      - docker manifest push ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}
     finally:
       - rm -rfv ~/.docker
