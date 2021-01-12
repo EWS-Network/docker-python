@@ -1,0 +1,35 @@
+﻿
+version: 0.2
+env:
+  shell: /bin/bash
+  variables:
+    - USE_EPOCH: 1
+
+phases:
+  install:
+    commands:
+      - if [ -z ${AWS_ACCOUNT_ID+x} ]; then AWS_ACCOUNT_ID=$(aws sts get-caller-identity | jq -r .Account); fi
+      - REGISTRY_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION:-$AWS_DEFAULT_REGION}.amazonaws.com/
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${REGISTRY_URI}
+      - COMMIT_HASH=${CODEBUILD_RESOLVED_SOURCE_VERSION::7}
+      - EPOCH=`date +'%Y-%m-%d'`
+      - IMAGE_TAG=${COMMIT_HASH:=$EPOCH}
+      - if [ $USE_EPOCH -eq 1 ]; then IMAGE_TAG=$EPOCH; fi
+
+  build:
+    commands:
+      - |
+          if [ -z ${ARCH+x} ]; then
+            docker build -t python:${IMAGE_TAG} .
+            docker tag python:${IMAGE_TAG} ${REGISTRY_URI}python:${IMAGE_TAG}
+            docker tag python:${IMAGE_TAG} ${REGISTRY_URI}python:${IMAGE_TAG}-amd64
+            docker push ${REGISTRY_URI}python:${IMAGE_TAG}
+            docker push ${REGISTRY_URI}python:${IMAGE_TAG}-amd64
+          else
+            docker build --build-arg ARCH=${ARCH} -t python:${IMAGE_TAG}-${ARCH} .
+            docker tag python:${IMAGE_TAG}-${ARCH} ${REGISTRY_URI}python:${IMAGE_TAG}-${ARCH}
+            docker push ${REGISTRY_URI}python:${IMAGE_TAG}-${ARCH}
+          fi
+
+    finally:
+      - rm -rfv ~/.docker
