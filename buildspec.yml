@@ -11,20 +11,24 @@ batch:
   build-graph:
     - identifier: amd64
       env:
-        compute-type: BUILD_GENERAL1_SMALL
+        compute-type: BUILD_GENERAL1_LARGE
+        privileged-mode: true
       buildspec: build_images.yml
+
     - identifier: arm64v8
       env:
-        compute-type: BUILD_GENERAL1_LARGE
         type: ARM_CONTAINER
         image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        compute-type: BUILD_GENERAL1_LARGE
+        privileged-mode: true
         variables:
           ARCH: arm64v8
       buildspec: build_images.yml
 
     - identifier: manifest
       env:
-        compute-type: BUILD_GENERAL1_SMALL
+        compute-type: BUILD_GENERAL1_LARGE
+        privileged-mode: true
       depend-on:
         - amd64
         - arm64v8
