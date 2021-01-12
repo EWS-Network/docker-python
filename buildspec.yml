@@ -10,13 +10,13 @@ env:
 batch:
   fast-fail: false
   build-graph:
-    - identifier: amd64
+    - identifier: amd64_37
       env:
         compute-type: BUILD_GENERAL1_LARGE
         privileged-mode: true
       buildspec: build_images.yml
 
-    - identifier: arm64v8
+    - identifier: arm64v8_37
       env:
         type: ARM_CONTAINER
         image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
@@ -26,13 +26,34 @@ batch:
           ARCH: arm64v8
       buildspec: build_images.yml
 
+    - identifier: amd64_38
+      env:
+        compute-type: BUILD_GENERAL1_LARGE
+        privileged-mode: true
+        variables:
+          VERSION: 38
+      buildspec: build_images.yml
+
+    - identifier: arm64v8_38
+      env:
+        type: ARM_CONTAINER
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        compute-type: BUILD_GENERAL1_LARGE
+        privileged-mode: true
+        variables:
+          ARCH: arm64v8
+          VERSION: 38
+      buildspec: build_images.yml
+
     - identifier: manifest
       env:
         compute-type: BUILD_GENERAL1_LARGE
         privileged-mode: true
       depend-on:
-        - amd64
-        - arm64v8
+        - amd64_37
+        - arm64v8_37
+        - amd64_38
+        - arm64v8_38
 
 phases:
   install:
@@ -50,7 +71,8 @@ phases:
     commands:
       - |
           for ARCH in "" "-amd64" "-arm64v8"; do
-            echo Publish from {REGISTRY_URI}python:${IMAGE_TAG}${ARCH} to ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}${ARCH};
+            echo Publish from ${REGISTRY_URI}python:${IMAGE_TAG}${ARCH} to \
+                          ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}${ARCH};
             docker pull ${REGISTRY_URI}python:${IMAGE_TAG}${ARCH}     ;
             docker tag  ${REGISTRY_URI}python:${IMAGE_TAG}${ARCH} \
                         ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}${ARCH} ;

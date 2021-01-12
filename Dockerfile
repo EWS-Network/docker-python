@@ -6,3 +6,4 @@ RUN yum upgrade -y; yum install python3 -y; curl https://bootstrap.pypa.io/get-p
 
 MAINTAINER john@composex.io
 LABEL runtime=python
+LABEL version=3.7.9
