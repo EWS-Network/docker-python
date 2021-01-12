@@ -20,7 +20,7 @@ phases:
     commands:
       - |
           if [ -z ${ARCH+x} ]; then
-            docker build -t python:${IMAGE_TAG} -f Dockerfile${$VERSION:+.$VERSION} .
+            docker build -t python:${IMAGE_TAG} -f Dockerfile${VERSION:+.$VERSION} .
             docker tag python:${IMAGE_TAG} ${REGISTRY_URI}python:${IMAGE_TAG}
             docker tag python:${IMAGE_TAG} ${REGISTRY_URI}python:${IMAGE_TAG}-amd64
             docker push ${REGISTRY_URI}python:${IMAGE_TAG}
