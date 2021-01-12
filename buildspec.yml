@@ -47,15 +47,18 @@ phases:
 
   build:
     commands:
-      - docker pull ${REGISTRY_URI}python:${IMAGE_TAG}
-      - docker pull ${REGISTRY_URI}python:${IMAGE_TAG}-amd64
-      - docker pull ${REGISTRY_URI}python:${IMAGE_TAG}-arm64v8
+      - |
+          for ARCH in "" "-amd64" "-arm64v8"; do
+            docker pull ${REGISTRY_URI}python:${IMAGE_TAG}${ARCH}
+            docker tag ${REGISTRY_URI}python:${IMAGE_TAG}-${ARCH} ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}${ARCH}
+            docker push ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}${ARCH}
+          done
+
       - |
           docker manifest create ${PUBLIC_REGISTRY}/python:latest \
           --amend ${REGISTRY_URI}python:${IMAGE_TAG}              \
           --amend ${REGISTRY_URI}python:${IMAGE_TAG}-amd64        \
           --amend ${REGISTRY_URI}python:${IMAGE_TAG}-arm64v8
-      - docker manifest push {PUBLIC_REGISTRY}/python:latest
-
+      - docker manifest push {PUBLIC_REGISTRY}/python:${IMAGE_TAG}
     finally:
       - rm -rfv ~/.docker
