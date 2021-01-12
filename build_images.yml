@@ -26,7 +26,7 @@ phases:
             docker push ${REGISTRY_URI}python:${IMAGE_TAG}
             docker push ${REGISTRY_URI}python:${IMAGE_TAG}-amd64
           else
-            docker build --build-arg ARCH=${ARCH} -t python:${IMAGE_TAG}-${ARCH} .
+            docker build --build-arg ARCH="-${ARCH}" -t python:${IMAGE_TAG}-${ARCH} .
             docker tag python:${IMAGE_TAG}-${ARCH} ${REGISTRY_URI}python:${IMAGE_TAG}-${ARCH}
             docker push ${REGISTRY_URI}python:${IMAGE_TAG}-${ARCH}
           fi
