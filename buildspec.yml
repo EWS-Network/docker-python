@@ -15,7 +15,7 @@ batch:
         compute-type: BUILD_GENERAL1_LARGE
         privileged-mode: true
         variables:
-          VERSION: py37
+          VERSION: 3.7
       buildspec: build_images.yml
 
     - identifier: arm64v8_py37
@@ -26,7 +26,7 @@ batch:
         privileged-mode: true
         variables:
           ARCH: arm64v8
-          VERSION: py37
+          VERSION: 3.7
       buildspec: build_images.yml
 
     - identifier: amd64_py38
@@ -34,7 +34,7 @@ batch:
         compute-type: BUILD_GENERAL1_LARGE
         privileged-mode: true
         variables:
-          VERSION: py38
+          VERSION: 3.8
       buildspec: build_images.yml
 
     - identifier: arm64v8_py38
@@ -45,7 +45,7 @@ batch:
         privileged-mode: true
         variables:
           ARCH: arm64v8
-          VERSION: py38
+          VERSION: 3.8
       buildspec: build_images.yml
 
     - identifier: manifest
@@ -73,18 +73,18 @@ phases:
   build:
     commands:
       - |
-          for VERSION in 37 38; do
+          for VERSION in 3.7 3.8; do
             for ARCH in "" "amd64" "arm64v8"; do
               TAG=${VERSION}.${SUFFIX}
-              echo Publish from ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH} to \
-                            ${PUBLIC_REGISTRY}/python:${TAG}${ARCH:+-$ARCH}           ;
-              docker pull ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH}     ;
-              docker tag  ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH} \
-                          ${PUBLIC_REGISTRY}/python:${TAG}${ARCH:+-$ARCH} ;
-              docker push ${PUBLIC_REGISTRY}/python:${TAG}${ARCH:+-$ARCH} ;
+              echo Publish from ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH} to  \
+                            ${PUBLIC_REGISTRY}/python:${TAG}${ARCH:+-$ARCH}     ;
+              docker pull ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH}           ;
+              docker tag  ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH}           \
+                          ${PUBLIC_REGISTRY}/python:${TAG}${ARCH:+-$ARCH}       ;
+              docker push ${PUBLIC_REGISTRY}/python:${TAG}${ARCH:+-$ARCH}       ;
             done
-            docker manifest create ${PUBLIC_REGISTRY}/python:${TAG} \
-              --amend ${PUBLIC_REGISTRY}/python:${TAG}-amd64          \
+            docker manifest create ${PUBLIC_REGISTRY}/python:${TAG}             \
+              --amend ${PUBLIC_REGISTRY}/python:${TAG}-amd64                    \
               --amend ${PUBLIC_REGISTRY}/python:${TAG}-arm64v8
             docker manifest push ${PUBLIC_REGISTRY}/python:${TAG}
           done
