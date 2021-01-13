@@ -20,7 +20,7 @@ phases:
   build:
     commands:
       - TAG=${VERSION}.${SUFFIX}
-      - docker build -t python:${TAG} ${ARCH:+--build-arg ARCH="-${ARCH}"} -f Dockerfile.${VERSION} .
+      - docker build -t python:${TAG}${ARCH:+-$ARCH} ${ARCH:+--build-arg ARCH="-${ARCH}"} -f Dockerfile.${VERSION} .
       - docker tag python:${TAG}${ARCH:+-$ARCH} ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH}
       - docker push ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH}
 
