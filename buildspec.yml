@@ -10,13 +10,15 @@ env:
 batch:
   fast-fail: false
   build-graph:
-    - identifier: amd64_37
+    - identifier: amd64_py37
       env:
         compute-type: BUILD_GENERAL1_LARGE
         privileged-mode: true
+        variables:
+          VERSION: py37
       buildspec: build_images.yml
 
-    - identifier: arm64v8_37
+    - identifier: arm64v8_py37
       env:
         type: ARM_CONTAINER
         image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
@@ -24,17 +26,18 @@ batch:
         privileged-mode: true
         variables:
           ARCH: arm64v8
+          VERSION: py37
       buildspec: build_images.yml
 
-    - identifier: amd64_38
+    - identifier: amd64_py38
       env:
         compute-type: BUILD_GENERAL1_LARGE
         privileged-mode: true
         variables:
-          VERSION: 38
+          VERSION: py38
       buildspec: build_images.yml
 
-    - identifier: arm64v8_38
+    - identifier: arm64v8_py38
       env:
         type: ARM_CONTAINER
         image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
@@ -42,7 +45,7 @@ batch:
         privileged-mode: true
         variables:
           ARCH: arm64v8
-          VERSION: 38
+          VERSION: py38
       buildspec: build_images.yml
 
     - identifier: manifest
@@ -50,10 +53,10 @@ batch:
         compute-type: BUILD_GENERAL1_LARGE
         privileged-mode: true
       depend-on:
-        - amd64_37
-        - arm64v8_37
-        - amd64_38
-        - arm64v8_38
+        - amd64_py37
+        - arm64v8_py37
+        - amd64_py38
+        - arm64v8_py38
 
 phases:
   install:
@@ -63,27 +66,27 @@ phases:
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${REGISTRY_URI}
       - aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${PUBLIC_REGISTRY}
       - if ! [ -z ${CODEBUILD_RESOLVED_SOURCE_VERSION+x} ]; then COMMIT_HASH=${CODEBUILD_RESOLVED_SOURCE_VERSION::7}; fi
-      - EPOCH=`date +'%Y-%m-%d'`
-      - IMAGE_TAG=${COMMIT_HASH:=$EPOCH}
-      - if [ $USE_EPOCH -eq 1 ]; then IMAGE_TAG=$EPOCH; fi
+      - EPOCH=`date +'%Y%m%d'`
+      - SUFFIX=${COMMIT_HASH:=$EPOCH}
+      - if [ $USE_EPOCH -eq 1 ]; then SUFFIX=$EPOCH; fi
 
   build:
     commands:
       - |
-          for ARCH in "" "-amd64" "-arm64v8"; do
-            echo Publish from ${REGISTRY_URI}python:${IMAGE_TAG}${ARCH} to \
-                          ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}${ARCH};
-            docker pull ${REGISTRY_URI}python:${IMAGE_TAG}${ARCH}     ;
-            docker tag  ${REGISTRY_URI}python:${IMAGE_TAG}${ARCH} \
-                        ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}${ARCH} ;
-            docker push ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}${ARCH} ;
+          for VERSION in 37 38; do
+            for ARCH in "" "amd64" "arm64v8"; do
+              TAG=${VERSION}.${SUFFIX}
+              echo Publish from ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH} to \
+                            ${PUBLIC_REGISTRY}/python:${TAG}${ARCH:+-$ARCH}           ;
+              docker pull ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH}     ;
+              docker tag  ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH} \
+                          ${PUBLIC_REGISTRY}/python:${TAG}${ARCH:+-$ARCH} ;
+              docker push ${PUBLIC_REGISTRY}/python:${TAG}${ARCH:+-$ARCH} ;
+            done
+            docker manifest create ${PUBLIC_REGISTRY}/python:${TAG} \
+              --amend ${PUBLIC_REGISTRY}/python:${TAG}-amd64          \
+              --amend ${PUBLIC_REGISTRY}/python:${TAG}-arm64v8
+            docker manifest push ${PUBLIC_REGISTRY}/python:${TAG}
           done
-
-      - |
-          docker manifest create ${PUBLIC_REGISTRY}/python:${IMAGE_TAG} \
-          --amend ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}                \
-          --amend ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}-amd64          \
-          --amend ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}-arm64v8
-      - docker manifest push ${PUBLIC_REGISTRY}/python:${IMAGE_TAG}
     finally:
       - rm -rfv ~/.docker
