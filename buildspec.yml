@@ -85,10 +85,11 @@ phases:
               docker push ${PUBLIC_REGISTRY}/python:${TAG}
             done
 
-            docker manifest create ${PUBLIC_REGISTRY}/python:${TAG}             \
-              --amend ${PUBLIC_REGISTRY}/python:${VERSION}.${SUFFIX}-amd64      \
+            docker manifest create ${PUBLIC_REGISTRY}/python:${VERSION}.${SUFFIX}       \
+              --amend ${PUBLIC_REGISTRY}/python:${VERSION}.${SUFFIX}-amd64              \
               --amend ${PUBLIC_REGISTRY}/python:${VERSION}.${SUFFIX}-arm64v8
-            docker manifest push ${PUBLIC_REGISTRY}/python:${TAG}
+
+            docker manifest push ${PUBLIC_REGISTRY}/python:${VERSION}.${SUFFIX}
           done
     finally:
       - rm -rfv ~/.docker
