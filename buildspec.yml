@@ -16,6 +16,7 @@ batch:
         privileged-mode: true
         variables:
           VERSION: 3.7
+          ARCH: amd64
       buildspec: build_images.yml
 
     - identifier: arm64v8_py37
@@ -35,6 +36,7 @@ batch:
         privileged-mode: true
         variables:
           VERSION: 3.8
+          ARCH: amd64
       buildspec: build_images.yml
 
     - identifier: arm64v8_py38
@@ -74,18 +76,18 @@ phases:
     commands:
       - |
           for VERSION in 3.7 3.8; do
-            for ARCH in "" "amd64" "arm64v8"; do
-              TAG=${VERSION}.${SUFFIX}
-              echo Publish from ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH} to  \
-                            ${PUBLIC_REGISTRY}/python:${TAG}${ARCH:+-$ARCH}     ;
-              docker pull ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH}           ;
-              docker tag  ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH}           \
-                          ${PUBLIC_REGISTRY}/python:${TAG}${ARCH:+-$ARCH}       ;
-              docker push ${PUBLIC_REGISTRY}/python:${TAG}${ARCH:+-$ARCH}       ;
+            for ARCH in "amd64" "arm64v8"; do
+              TAG=${VERSION}.${SUFFIX}-${ARCH}
+
+              echo Publish from ${REGISTRY_URI}python:${TAG}$ to ${PUBLIC_REGISTRY}/python:${TAG}$
+              docker pull ${REGISTRY_URI}python:${TAG}
+              docker tag  ${REGISTRY_URI}python:${TAG} ${PUBLIC_REGISTRY}/python:${TAG}
+              docker push ${PUBLIC_REGISTRY}/python:${TAG}
             done
+
             docker manifest create ${PUBLIC_REGISTRY}/python:${TAG}             \
-              --amend ${PUBLIC_REGISTRY}/python:${TAG}-amd64                    \
-              --amend ${PUBLIC_REGISTRY}/python:${TAG}-arm64v8
+              --amend ${PUBLIC_REGISTRY}/python:${VERSION}.${SUFFIX}-amd64      \
+              --amend ${PUBLIC_REGISTRY}/python:${VERSION}.${SUFFIX}-arm64v8
             docker manifest push ${PUBLIC_REGISTRY}/python:${TAG}
           done
     finally:
