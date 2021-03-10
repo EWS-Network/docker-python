@@ -1,5 +1,6 @@
 ﻿ARG ARCH=
-ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:2.0.20201218.1${ARCH}
+ARG BASE_TAG=2.0.20210219.0
+ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}${ARCH}
 FROM $BASE_IMAGE
 RUN yum upgrade -y; yum install -y amazon-linux-extras; amazon-linux-extras enable python3.8        ;\
     yum install python3.8 -y; curl https://bootstrap.pypa.io/get-pip.py | python3.8                 ;\

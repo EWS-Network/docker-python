@@ -4,7 +4,7 @@ env:
   shell: /bin/bash
   variables:
     USE_EPOCH: 1
-    PUBLIC_REGISTRY: public.ecr.aws/i9v7p2w3
+    PUBLIC_REGISTRY: public.ecr.aws/ews-network
     DOCKER_CLI_EXPERIMENTAL: enabled
 
 batch:
