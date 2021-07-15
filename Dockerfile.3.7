@@ -1,14 +1,15 @@
 ﻿ARG ARCH=
-ARG BASE_TAG=2.0.20210219.0
+ARG BASE_TAG=2
 ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}${ARCH}
 FROM $BASE_IMAGE
-RUN yum upgrade -y; yum install python3 -y; curl https://bootstrap.pypa.io/get-pip.py | python3 ;\
-    PY2=`readlink -f /usr/bin/python`; sed "1c\#\!${PY2}" /usr/bin/yum -i;\
-    yum clean all; rm -rfv /var/cache/yum ;\
-    unlink /usr/bin/python; ln -s /usr/bin/python3 /usr/bin/python;
+RUN yum upgrade -y; yum install python3 -y; curl https://bootstrap.pypa.io/get-pip.py | python3     ;\
+    PY2=`readlink -f /usr/bin/python`; sed "1c\#\!${PY2}" /usr/bin/yum -i                           ;\
+    sed "1c\#\!${PY2}" /usr/libexec/urlgrabber-ext-down -i                                          ;\
+    yum clean all; rm -rfv /var/cache/yum                                                           ;\
+    unlink /usr/bin/python; ln -s /usr/bin/python3 /usr/bin/python
 
 MAINTAINER john@composex.io
-LABEL version=3.7.9
+LABEL version=3.7
 LABEL runtime=python
 
-CMD ["python"]
+ENTRYPOINT ["python"]
