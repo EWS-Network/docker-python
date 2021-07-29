@@ -95,11 +95,11 @@ phases:
   build:
     commands:
       - |
-          for VERSION in 3.7 3.8; do
+          for VERSION in 3.7 3.8 3.9; do
             for ARCH in "amd64" "arm64v8"; do
               TAG=${VERSION}.${SUFFIX}-${ARCH}
 
-              echo Publish from ${REGISTRY_URI}python:${TAG}$ to ${PUBLIC_REGISTRY}/python:${TAG}$
+              echo Publish from ${REGISTRY_URI}python:${TAG}$ to ${PUBLIC_REGISTRY}/python:${TAG}
               docker pull ${REGISTRY_URI}python:${TAG}
               docker tag  ${REGISTRY_URI}python:${TAG} ${PUBLIC_REGISTRY}/python:${TAG}
               docker push ${PUBLIC_REGISTRY}/python:${TAG}
