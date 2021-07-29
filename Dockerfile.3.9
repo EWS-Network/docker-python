@@ -1,0 +1,44 @@
+﻿ARG ARCH=
+ARG BASE_TAG=2
+ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}${ARCH}
+ARG PY_VERSION=3.9.6
+
+FROM $BASE_IMAGE as updates
+RUN yum upgrade -y; yum clean packages; yum clean headers; yum clean metadata; yum clean all; rm -rfv /var/cache/yum;\
+    PY2=`readlink -f /usr/bin/python`;\
+    sed "1c\#\!${PY2}" /usr/bin/yum -i ;\
+    sed "1c\#\!${PY2}" /usr/libexec/urlgrabber-ext-down -i
+
+FROM updates as pybuild
+WORKDIR /opt
+
+ADD https://www.python.org/ftp/python/3.9.6/Python-3.9.6.tgz /opt/Python-3.9.6.tgz
+RUN yum upgrade -y; yum groupinstall "Development tools" -y; yum install -y openssl-devel bzip2-devel libffi-devel zlib-devel
+RUN mkdir /opt/install/python -p
+RUN tar xzf Python-3.9.6.tgz;  cd Python-3.9.6;  ./configure --prefix=/opt/install/python --with-system-ffi --with-computed-gotos --enable-loadable-sqlite-extensions; make && make altinstall
+RUN yum install tar gzip xz -y
+RUN cd /opt/install && tar cf - python | xz -z - > /opt/build-Python-3.9.6.tar.xz
+
+FROM $BASE_IMAGE
+WORKDIR /opt
+COPY --from=pybuild /opt/build-Python-3.9.6.tar.xz /opt/build-Python-3.9.6.tar.xz
+RUN yum upgrade -y; yum install make tar xz gzip -y;\
+    PY2=`readlink -f /usr/bin/python`;\
+    sed "1c\#\!${PY2}" /usr/bin/yum -i ;\
+    sed "1c\#\!${PY2}" /usr/libexec/urlgrabber-ext-down -i;\
+    ls /opt;\
+    tar xfJ build-Python-3.9.6.tar.xz;\
+    rm -rfv build-Python-3.9.6.tar.xz;\
+    find /opt/python -name "*.pyc" -delete -print;\
+    rm -rfv /opt/python/lib/python3.9/test;\
+    yum history undo last -y; yum autoremove -y; yum clean packages; yum clean headers; yum clean metadata; yum clean all; rm -rfv /var/cache/yum;\
+    (pip --version && pip install --no-cache-dir pip -U) || curl -sq https://bootstrap.pypa.io/get-pip.py | /opt/python/bin/python3.9	;\
+    unlink /usr/bin/python; ln -s /opt/python/bin/python3.9 /usr/bin/python
+ENV PATH=/opt/python/bin:$PATH
+WORKDIR /
+
+MAINTAINER john@composex.io
+LABEL runtime=python
+LABEL version=3.9
+
+ENTRYPOINT ["python"]

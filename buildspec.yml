@@ -50,6 +50,26 @@ batch:
           VERSION: 3.8
       buildspec: build_images.yml
 
+    - identifier: amd64_py39
+      env:
+        compute-type: BUILD_GENERAL1_LARGE
+        privileged-mode: true
+        variables:
+          VERSION: 3.9
+          ARCH: amd64
+      buildspec: build_images.yml
+
+    - identifier: arm64v8_py39
+      env:
+        type: ARM_CONTAINER
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        compute-type: BUILD_GENERAL1_LARGE
+        privileged-mode: true
+        variables:
+          ARCH: arm64v8
+          VERSION: 3.9
+      buildspec: build_images.yml
+
     - identifier: manifest
       env:
         compute-type: BUILD_GENERAL1_LARGE
