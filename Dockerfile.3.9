@@ -13,11 +13,16 @@ FROM updates as pybuild
 WORKDIR /opt
 
 ADD https://www.python.org/ftp/python/3.9.6/Python-3.9.6.tgz /opt/Python-3.9.6.tgz
-RUN yum upgrade -y; yum groupinstall "Development tools" -y; yum install -y openssl-devel bzip2-devel libffi-devel zlib-devel
-RUN mkdir /opt/install/python -p
-RUN tar xzf Python-3.9.6.tgz;  cd Python-3.9.6;  ./configure --prefix=/opt/install/python --with-system-ffi --with-computed-gotos --enable-loadable-sqlite-extensions; make && make altinstall
+RUN yum upgrade -y; yum groupinstall "Development tools" -y
+RUN yum install -y openssl-devel bzip2-devel libffi-devel zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel libpcap-devel xz-devel expat-devel
+RUN yum install -y ncurses-c++-libs ncurses-compat-libs ncurses-devel ncurses-libs ncurses-static
+RUN mkdir /opt/python -p
+RUN tar xzf Python-3.9.6.tgz
+ENV LDFLAGS="-L/opt/local/lib"
+ENV CFLAGS="-I/opt/local/include"
+RUN cd Python-3.9.6;  ./configure --prefix=/opt/python --with-system-ffi --with-computed-gotos --enable-loadable-sqlite-extensions; make && make altinstall
 RUN yum install tar gzip xz -y
-RUN cd /opt/install && tar cf - python | xz -z - > /opt/build-Python-3.9.6.tar.xz
+RUN cd /opt && tar cf - python | xz -z - > /opt/build-Python-3.9.6.tar.xz
 
 FROM $BASE_IMAGE
 WORKDIR /opt
