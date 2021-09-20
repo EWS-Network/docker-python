@@ -1,5 +1,5 @@
 ﻿ARG ARCH=
-ARG BASE_TAG=2.0.20210721.2
+ARG BASE_TAG=2.0.20210813.1
 ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}${ARCH}
 ARG PY_VERSION=3.9.6
 
@@ -46,4 +46,4 @@ MAINTAINER john@composex.io
 LABEL runtime=python
 LABEL version=3.9
 
-ENTRYPOINT ["python"]
+CMD ["python"]
