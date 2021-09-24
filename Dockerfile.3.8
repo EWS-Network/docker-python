@@ -6,13 +6,16 @@ ENV PATH=$PATH:/usr/local/bin
 RUN yum upgrade -y; yum install -y amazon-linux-extras ;\
     amazon-linux-extras enable python3.8 ;\
     yum install python3.8 -y ;\
-    curl https://bootstrap.pypa.io/get-pip.py | python3.8 ;\
+    curl -s https://bootstrap.pypa.io/get-pip.py | python3.8 ;\
     PY2=`readlink -f /usr/bin/python` ;\
     sed "1c\#\!${PY2}" /usr/bin/yum -i ;\
     sed "1c\#\!${PY2}" /usr/libexec/urlgrabber-ext-down -i ;\
     yum clean all; rm -rfv /var/cache/yum ;\
     unlink /usr/bin/python;\
-    ln -s /usr/bin/python3.8 /usr/bin/python
+    ln -s /usr/bin/python3.8 /usr/bin/python ;\
+    ln -s /lib/python2.7/site-packages/amazon_linux_extras /lib/python3.8/site-packages/ ;\
+    BASE=$($PY2 -c 'import yum; yb = yum.YumBase(); print(yb.conf.yumvar["basearch"])' | tail -1) ;\
+    sed "s/(\"basearch\", None)/(\"basearch\", \"${BASE}\")/g" /usr/lib/python2.7/site-packages/amazon_linux_extras/software_catalog.py -i
 
 MAINTAINER john@composex.io
 LABEL runtime=python

@@ -38,7 +38,11 @@ RUN yum upgrade -y; yum install make tar xz gzip -y;\
     rm -rfv /opt/python/lib/python3.9/test;\
     yum history undo last -y; yum autoremove -y; yum clean packages; yum clean headers; yum clean metadata; yum clean all; rm -rfv /var/cache/yum;\
     (pip --version && pip install --no-cache-dir pip -U) || curl -sq https://bootstrap.pypa.io/get-pip.py | /opt/python/bin/python3.9	;\
-    unlink /usr/bin/python; ln -s /opt/python/bin/python3.9 /usr/bin/python
+    unlink /usr/bin/python; \
+    ln -s /opt/python/bin/python3.9 /usr/bin/python ;\
+    ln -s /lib/python2.7/site-packages/amazon_linux_extras /lib/python3.9/site-packages/ ;\
+    BASE=$($PY2 -c 'import yum; yb = yum.YumBase(); print(yb.conf.yumvar["basearch"])' | tail -1) ;\
+    sed "s/(\"basearch\", None)/(\"basearch\", \"${BASE}\")/g" /usr/lib/python2.7/site-packages/amazon_linux_extras/software_catalog.py -i
 ENV PATH=/opt/python/bin:$PATH
 WORKDIR /
 
