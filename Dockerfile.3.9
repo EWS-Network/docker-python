@@ -1,4 +1,4 @@
-﻿ARG ARCH=
+ARG ARCH=
 ARG BASE_TAG=2.0.20211201.0
 ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}${ARCH}
 ARG PY_VERSION=3.9.9
@@ -29,6 +29,7 @@ RUN cd /opt && tar cf - python | xz -z - > /opt/build-Python-3.9.9.tar.xz
 
 FROM $BASE_IMAGE
 WORKDIR /opt
+
 COPY --from=pybuild /opt/build-Python-3.9.9.tar.xz /opt/build-Python-3.9.9.tar.xz
 ENV PATH=/opt/python/bin:$PATH
 RUN yum upgrade -y; yum install -y openssl11-libs; yum install make tar xz gzip -y;\
