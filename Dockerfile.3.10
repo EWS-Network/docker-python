@@ -1,7 +1,7 @@
-ARG ARCH=
+﻿ARG ARCH=
 ARG BASE_TAG=2.0.20211201.0
 ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}${ARCH}
-ARG PY_VERSION=3.9.9
+ARG PY_VERSION=3.10.1
 
 FROM $BASE_IMAGE as updates
 RUN yum upgrade -y; yum clean packages; yum clean headers; yum clean metadata; yum clean all; rm -rfv /var/cache/yum;\
@@ -12,48 +12,47 @@ RUN yum upgrade -y; yum clean packages; yum clean headers; yum clean metadata; y
 FROM updates as pybuild
 WORKDIR /opt
 
-ADD https://www.python.org/ftp/python/3.9.9/Python-3.9.9.tgz /opt/Python-3.9.9.tgz
 RUN yum upgrade -y; yum groupinstall "Development tools" -y
-RUN yum install tar gzip xz -y
 RUN yum install -y openssl11 openssl11-devel bzip2-devel libffi-devel zlib-devel bzip2-devel ncurses-devel sqlite-devel readline-devel tk-devel libpcap-devel xz-devel expat-devel
 RUN yum install -y ncurses-c++-libs ncurses-compat-libs ncurses-devel ncurses-libs ncurses-static
 RUN mkdir /opt/python -p
-RUN tar xzf Python-3.9.9.tgz
+RUN yum install tar gzip xz -y
+ADD https://www.python.org/ftp/python/3.10.1/Python-3.10.1.tar.xz /opt/Python-3.10.1.tar.xz
+RUN tar Jxf Python-3.10.1.tar.xz
 ENV LDFLAGS="-L/opt/local/lib"
 ENV CFLAGS="-I/opt/local/include"
-WORKDIR /opt/Python-3.9.9
-RUN ./configure --prefix=/opt/python --with-system-ffi --with-computed-gotos --enable-loadable-sqlite-extensions --enable-optimizations
+WORKDIR /opt/Python-3.10.1
+RUN ./configure --prefix=/opt/python --with-computed-gotos --enable-loadable-sqlite-extensions --enable-optimizations
 ARG CPU_COUNT="-j 1"
 RUN make ${CPU_COUNT} && make altinstall
-RUN cd /opt && tar cf - python | xz -z - > /opt/build-Python-3.9.9.tar.xz
+RUN cd /opt && tar cf - python | xz -z - > /opt/build-Python-3.10.1.tar.xz
 
 FROM $BASE_IMAGE
 WORKDIR /opt
-
-COPY --from=pybuild /opt/build-Python-3.9.9.tar.xz /opt/build-Python-3.9.9.tar.xz
+COPY --from=pybuild /opt/build-Python-3.10.1.tar.xz /opt/build-Python-3.10.1.tar.xz
 ENV PATH=/opt/python/bin:$PATH
 RUN yum upgrade -y; yum install -y openssl11-libs; yum install make tar xz gzip -y;\
     PY2=`readlink -f /usr/bin/python`;\
     sed "1c\#\!${PY2}" /usr/bin/yum -i ;\
     sed "1c\#\!${PY2}" /usr/libexec/urlgrabber-ext-down -i;\
     ls /opt;\
-    tar xfJ build-Python-3.9.9.tar.xz;\
-    rm -rfv build-Python-3.9.9.tar.xz;\
-    find /opt/python -name "*.pyc" -delete -print;\
-    rm -rfv /opt/python/lib/python3.9/test;\
+    tar xfJ build-Python-3.10.1.tar.xz;\
+    rm -rfv build-Python-3.10.1.tar.xz;\
+    find /opt/python -name "*.pyc" -delete;\
+    rm -rfv /opt/python/lib/python3.10/test;\
     yum history undo last -y; yum autoremove -y; yum clean packages; yum clean headers; yum clean metadata; yum clean all; rm -rfv /var/cache/yum;\
     unlink /usr/bin/python; \
-    ln -s /opt/python/bin/python3.9 /usr/bin/python ;\
-    ln -s /lib/python2.7/site-packages/amazon_linux_extras /opt/python/lib/python3.9/site-packages/ ;\
+    ln -s /opt/python/bin/python3.10 /usr/bin/python ;\
+    ln -s /lib/python2.7/site-packages/amazon_linux_extras /opt/python/lib/python3.10/site-packages/ ;\
     BASE=$($PY2 -c 'import yum; yb = yum.YumBase(); print(yb.conf.yumvar["basearch"])' | tail -1) ;\
     sed "s/(\"basearch\", None)/(\"basearch\", \"${BASE}\")/g" /usr/lib/python2.7/site-packages/amazon_linux_extras/software_catalog.py -i ;\
-    (pip --version && pip install --no-cache-dir pip -U) || curl -sq https://bootstrap.pypa.io/get-pip.py | /opt/python/bin/python3.9	;\
+    (pip --version && pip install --no-cache-dir pip -U) || curl -sq https://bootstrap.pypa.io/get-pip.py | /opt/python/bin/python3.10	;\
     pip install setuptools -U
 
 WORKDIR /
 
 MAINTAINER john@composex.io
 LABEL runtime=python
-LABEL version=3.9
+LABEL version=3.10
 
 CMD ["python"]

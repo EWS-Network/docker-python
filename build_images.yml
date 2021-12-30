@@ -20,7 +20,9 @@ phases:
   build:
     commands:
       - TAG=${VERSION}.${SUFFIX}
-      - docker build -t python:${TAG}${ARCH:+-$ARCH} ${ARCH:+--build-arg ARCH="-${ARCH}"} -f Dockerfile.${VERSION} .
+      - CPU_COUNT=`cat /proc/cpuinfo | grep processor | wc -l`
+      - echo CPU COUNT IS $CPU_COUNT
+      - docker build -t python:${TAG}${ARCH:+-$ARCH} ${ARCH:+--build-arg ARCH="-${ARCH}"} --build-arg CPU_COUNT="-j ${CPU_COUNT}" -f Dockerfile.${VERSION} .
       - docker tag python:${TAG}${ARCH:+-$ARCH} ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH}
       - docker push ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH}
 
