@@ -21,7 +21,8 @@ RUN mkdir /opt/python -p
 RUN tar xzf Python-3.9.9.tgz
 ENV LDFLAGS="-L/opt/local/lib"
 ENV CFLAGS="-I/opt/local/include"
-RUN cd Python-3.9.9;  ./configure --prefix=/opt/python --with-system-ffi --with-computed-gotos --enable-loadable-sqlite-extensions
+WORKDIR /opt/Python-3.9.9
+RUN ./configure --prefix=/opt/python --with-system-ffi --with-computed-gotos --enable-loadable-sqlite-extensions --enable-optimizations
 ARG CPU_COUNT="-j 1"
 RUN make ${CPU_COUNT} && make altinstall
 RUN cd /opt && tar cf - python | xz -z - > /opt/build-Python-3.9.9.tar.xz
