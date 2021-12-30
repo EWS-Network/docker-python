@@ -1,12 +1,11 @@
 ﻿ARG ARCH=
-ARG BASE_TAG=2.0.20210813.1
+ARG BASE_TAG=2.0.20211201.0
 ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}${ARCH}
 FROM $BASE_IMAGE
 ENV PATH=$PATH:/usr/local/bin
 RUN yum upgrade -y; yum install -y amazon-linux-extras ;\
     amazon-linux-extras enable python3.8 ;\
     yum install python3.8 -y ;\
-    curl -s https://bootstrap.pypa.io/get-pip.py | python3.8 ;\
     PY2=`readlink -f /usr/bin/python` ;\
     sed "1c\#\!${PY2}" /usr/bin/yum -i ;\
     sed "1c\#\!${PY2}" /usr/libexec/urlgrabber-ext-down -i ;\
@@ -15,7 +14,9 @@ RUN yum upgrade -y; yum install -y amazon-linux-extras ;\
     ln -s /usr/bin/python3.8 /usr/bin/python ;\
     ln -s /lib/python2.7/site-packages/amazon_linux_extras /lib/python3.8/site-packages/ ;\
     BASE=$($PY2 -c 'import yum; yb = yum.YumBase(); print(yb.conf.yumvar["basearch"])' | tail -1) ;\
-    sed "s/(\"basearch\", None)/(\"basearch\", \"${BASE}\")/g" /usr/lib/python2.7/site-packages/amazon_linux_extras/software_catalog.py -i
+    sed "s/(\"basearch\", None)/(\"basearch\", \"${BASE}\")/g" /usr/lib/python2.7/site-packages/amazon_linux_extras/software_catalog.py -i ;\
+    curl -s https://bootstrap.pypa.io/get-pip.py | python3.8 ;\
+    pip3 install setuptools -U --no-cache-dir
 
 MAINTAINER john@composex.io
 LABEL runtime=python
