@@ -95,7 +95,7 @@ phases:
   build:
     commands:
       - |
-          for VERSION in 3.7 3.8 3.9; do
+          for VERSION in 3.7 3.8 3.9 3.10; do
             for ARCH in "amd64" "arm64v8"; do
               TAG=${VERSION}.${SUFFIX}-${ARCH}
 
