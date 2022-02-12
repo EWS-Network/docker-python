@@ -1,9 +1,9 @@
 ﻿ARG ARCH=
-ARG BASE_TAG=2.0.20211201.0
+ARG BASE_TAG=2.0.20220207.1
 ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}${ARCH}
 FROM $BASE_IMAGE
 RUN yum upgrade -y; yum install python3 -y ;\
-    yum install amazon-linux-extras -y ;\
+    amazon-linux-extras || yum install amazon-linux-extras -y ;\
     PY2=`readlink -f /usr/bin/python`; sed "1c\#\!${PY2}" /usr/bin/yum -i                           ;\
     sed "1c\#\!${PY2}" /usr/libexec/urlgrabber-ext-down -i                                          ;\
     yum clean all; rm -rfv /var/cache/yum                                                           ;\
