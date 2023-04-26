@@ -4,6 +4,7 @@ env:
   shell: /bin/bash
   variables:
     USE_EPOCH: 1
+    BASE_TAG: 2.0.20230418.0
 
 phases:
   install:
