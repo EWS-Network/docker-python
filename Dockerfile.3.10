@@ -1,5 +1,5 @@
 ﻿ARG ARCH=
-ARG BASE_TAG=2.0.20220207.1
+ARG BASE_TAG=2.0.20230530.0
 ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}${ARCH}
 ARG PY_VERSION=3.10.1
 
