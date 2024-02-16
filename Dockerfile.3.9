@@ -1,22 +1,19 @@
 ARG ARCH=
-ARG BASE_TAG=minimal
+ARG BASE_TAG=2023
 ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}
 ARG PY_VERSION=3.9.17
 
 FROM $BASE_IMAGE as updates
-RUN yum upgrade -y; yum clean packages; yum clean headers; yum clean metadata; yum clean all; rm -rfv /var/cache/yum;\
-    PY2=`readlink -f /usr/bin/python`;\
-    sed "1c\#\!${PY2}" /usr/bin/yum -i ;\
-    sed "1c\#\!${PY2}" /usr/libexec/urlgrabber-ext-down -i
+RUN dnf upgrade -y; dnf clean packages; dnf clean headers; dnf clean metadata; dnf clean all; rm -rfv /var/cache/dnf
 
 FROM updates as pybuild
 WORKDIR /opt
 
 ADD https://www.python.org/ftp/python/3.9.17/Python-3.9.17.tgz /opt/Python-3.9.17.tgz
-RUN yum upgrade -y; yum groupinstall "Development tools" -y
-RUN yum install tar gzip xz -y
-RUN yum install -y openssl11 openssl11-devel bzip2-devel libffi-devel zlib-devel bzip2-devel ncurses-devel sqlite-devel readline-devel tk-devel libpcap-devel xz-devel expat-devel
-RUN yum install -y ncurses-c++-libs ncurses-compat-libs ncurses-devel ncurses-libs ncurses-static
+RUN dnf upgrade -y; dnf groupinstall "Development tools" -y
+RUN dnf install tar gzip xz -y
+RUN dnf install -y openssl openssl-devel bzip2-devel libffi-devel zlib-devel bzip2-devel ncurses-devel sqlite-devel readline-devel tk-devel libpcap-devel xz-devel expat-devel
+RUN dnf install -y ncurses-c++-libs ncurses-compat-libs ncurses-devel ncurses-libs ncurses-static
 RUN mkdir /opt/python -p
 RUN tar xzf Python-3.9.17.tgz
 ENV LDFLAGS="-L/opt/local/lib"
@@ -32,23 +29,17 @@ WORKDIR /opt
 
 COPY --from=pybuild /opt/build-Python-3.9.17.tar.xz /opt/build-Python-3.9.17.tar.xz
 ENV PATH=/opt/python/bin:$PATH
-RUN yum upgrade -y; yum install -y openssl11-libs; yum install make tar xz gzip -y;\
-    PY2=`readlink -f /usr/bin/python`;\
-    sed "1c\#\!${PY2}" /usr/bin/yum -i ;\
-    sed "1c\#\!${PY2}" /usr/libexec/urlgrabber-ext-down -i;\
+RUN dnf upgrade -y; dnf install -y openssl11-libs; dnf install make tar xz gzip -y;\
     ls /opt;\
     tar xfJ build-Python-3.9.17.tar.xz;\
     rm -rfv build-Python-3.9.17.tar.xz;\
     find /opt/python -name "*.pyc" -delete -print;\
     rm -rfv /opt/python/lib/python3.9/test;\
-    yum history undo last -y; yum autoremove -y; yum clean packages; yum clean headers; yum clean metadata; yum clean all; rm -rfv /var/cache/yum;\
-    unlink /usr/bin/python; \
-    ln -s /opt/python/bin/python3.9 /usr/bin/python ;\
-    ln -s /lib/python2.7/site-packages/amazon_linux_extras /opt/python/lib/python3.9/site-packages/ ;\
-    BASE=$($PY2 -c 'import yum; yb = yum.YumBase(); print(yb.conf.yumvar["basearch"])' | tail -1) ;\
-    sed "s/(\"basearch\", None)/(\"basearch\", \"${BASE}\")/g" /usr/lib/python2.7/site-packages/amazon_linux_extras/software_catalog.py -i ;\
+    dnf history undo last -y; dnf autoremove -y; dnf clean packages; dnf clean headers; dnf clean metadata; dnf clean all; rm -rfv /var/cache/dnf;\
     (pip --version && pip install --no-cache-dir pip -U) || curl -sq https://bootstrap.pypa.io/get-pip.py | /opt/python/bin/python3.9	;\
     pip install setuptools -U
+
+RUN ln -s /opt/python/bin/python3.9 /usr/bin/python
 
 WORKDIR /
 
