@@ -10,6 +10,23 @@ env:
 batch:
   fast-fail: false
   build-graph:
+    - identifier: amd64_py38
+      env:
+        compute-type: BUILD_GENERAL1_LARGE
+        privileged-mode: true
+        variables:
+          VERSION: 3.8
+      buildspec: build_images.yml
+
+    - identifier: arm64v8_py38
+      env:
+        type: ARM_CONTAINER
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        compute-type: BUILD_GENERAL1_LARGE
+        privileged-mode: true
+        variables:
+          VERSION: 3.8
+      buildspec: build_images.yml
     - identifier: amd64_py39
       env:
         compute-type: BUILD_GENERAL1_LARGE
@@ -51,6 +68,8 @@ batch:
         compute-type: BUILD_GENERAL1_LARGE
         privileged-mode: true
       depend-on:
+        - amd64_py38
+        - arm64v8_py38
         - amd64_py39
         - arm64v8_py39
         - amd64_py310
@@ -71,7 +90,7 @@ phases:
   build:
     commands:
       - |
-          for VERSION in 3.9 3.10; do
+          for VERSION in 3.8 3.9 3.10; do
             for ARCH in "x86_64" "aarch64"; do
               TAG=${VERSION}.${SUFFIX}-${ARCH}
 

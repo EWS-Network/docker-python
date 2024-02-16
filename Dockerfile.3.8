@@ -1,14 +1,47 @@
-﻿ARG ARCH=
-ARG BASE_TAG=minimal
+ARG ARCH=
+ARG BASE_TAG=2023
 ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}
+ARG PY_VERSION=3.8.12
+
+FROM $BASE_IMAGE as updates
+RUN dnf upgrade -y; dnf clean packages; dnf clean headers; dnf clean metadata; dnf clean all; rm -rfv /var/cache/dnf
+
+FROM updates as pybuild
+WORKDIR /opt
+
+ADD https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz /opt/Python-3.8.12.tgz
+RUN dnf upgrade -y; dnf groupinstall "Development tools" -y
+RUN dnf install tar gzip xz -y
+RUN dnf install -y openssl openssl-devel bzip2-devel libffi-devel zlib-devel bzip2-devel ncurses-devel sqlite-devel readline-devel tk-devel libpcap-devel xz-devel expat-devel
+RUN dnf install -y ncurses-c++-libs ncurses-compat-libs ncurses-devel ncurses-libs ncurses-static
+RUN mkdir /opt/python -p
+RUN tar xzf Python-3.8.12.tgz
+ENV LDFLAGS="-L/opt/local/lib"
+ENV CFLAGS="-I/opt/local/include"
+WORKDIR /opt/Python-3.8.12
+RUN ./configure --prefix=/opt/python --with-system-ffi --with-computed-gotos --enable-loadable-sqlite-extensions --enable-optimizations
+ARG CPU_COUNT="-j 1"
+RUN make ${CPU_COUNT} && make altinstall
+RUN cd /opt && tar cf - python | xz -z - > /opt/build-Python-3.8.12.tar.xz
+
 FROM $BASE_IMAGE
-ENV PATH=$PATH:/usr/local/bin
-RUN dnf upgrade -y; \
-    amazon-linux-extras || dnf install -y amazon-linux-extras ;\
-    amazon-linux-extras enable python3.8 ;\
-    dnf install python3.8 -y ;\
-    curl -s https://bootstrap.pypa.io/get-pip.py | python3.8 ;\
-    pip3 install setuptools -U --no-cache-dir
+WORKDIR /opt
+
+COPY --from=pybuild /opt/build-Python-3.8.12.tar.xz /opt/build-Python-3.8.12.tar.xz
+ENV PATH=/opt/python/bin:$PATH
+RUN dnf upgrade -y; dnf install -y openssl11-libs; dnf install make tar xz gzip -y;\
+    ls /opt;\
+    tar xfJ build-Python-3.8.12.tar.xz;\
+    rm -rfv build-Python-3.8.12.tar.xz;\
+    find /opt/python -name "*.pyc" -delete -print;\
+    rm -rfv /opt/python/lib/python3.8/test;\
+    dnf history undo last -y; dnf autoremove -y; dnf clean packages; dnf clean headers; dnf clean metadata; dnf clean all; rm -rfv /var/cache/dnf;\
+    (pip --version && pip install --no-cache-dir pip -U) || curl -sq https://bootstrap.pypa.io/get-pip.py | /opt/python/bin/python3.8	;\
+    pip install setuptools -U
+
+RUN ln -s /opt/python/bin/python3.8 /usr/bin/python
+
+WORKDIR /
 
 MAINTAINER john@composex.io
 LABEL runtime=python
