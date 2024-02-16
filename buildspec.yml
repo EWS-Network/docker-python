@@ -16,7 +16,6 @@ batch:
         privileged-mode: true
         variables:
           VERSION: 3.8
-          ARCH: amd64
       buildspec: build_images.yml
 
     - identifier: arm64v8_py38
@@ -26,7 +25,6 @@ batch:
         compute-type: BUILD_GENERAL1_LARGE
         privileged-mode: true
         variables:
-          ARCH: arm64v8
           VERSION: 3.8
       buildspec: build_images.yml
 
@@ -36,7 +34,6 @@ batch:
         privileged-mode: true
         variables:
           VERSION: 3.9
-          ARCH: amd64
       buildspec: build_images.yml
 
     - identifier: arm64v8_py39
@@ -46,7 +43,6 @@ batch:
         compute-type: BUILD_GENERAL1_LARGE
         privileged-mode: true
         variables:
-          ARCH: arm64v8
           VERSION: 3.9
       buildspec: build_images.yml
 
@@ -56,7 +52,6 @@ batch:
         privileged-mode: true
         variables:
           VERSION: 3.10
-          ARCH: amd64
       buildspec: build_images.yml
 
     - identifier: arm64v8_py310
@@ -66,7 +61,6 @@ batch:
         compute-type: BUILD_GENERAL1_LARGE
         privileged-mode: true
         variables:
-          ARCH: arm64v8
           VERSION: 3.10
       buildspec: build_images.yml
 
@@ -98,7 +92,7 @@ phases:
     commands:
       - |
           for VERSION in 3.8 3.9 3.10; do
-            for ARCH in "amd64" "arm64v8"; do
+            for ARCH in "x86_64" "aarch64"; do
               TAG=${VERSION}.${SUFFIX}-${ARCH}
 
               echo Publish from ${REGISTRY_URI}python:${TAG}$ to ${PUBLIC_REGISTRY}/python:${TAG}

@@ -4,7 +4,7 @@ env:
   shell: /bin/bash
   variables:
     USE_EPOCH: 1
-    BASE_TAG: 2.0.20230530.0
+    BASE_TAG: minimal
 
 phases:
   install:
@@ -20,12 +20,12 @@ phases:
 
   build:
     commands:
-      - TAG=${VERSION}.${SUFFIX}
+      - TAG=${VERSION}.${SUFFIX}-$(uname -m)
       - CPU_COUNT=`cat /proc/cpuinfo | grep processor | wc -l`
       - echo CPU COUNT IS $CPU_COUNT
-      - docker build -t python:${TAG}${ARCH:+-$ARCH} ${ARCH:+--build-arg ARCH="-${ARCH}"} --build-arg CPU_COUNT="-j ${CPU_COUNT}" -f Dockerfile.${VERSION} .
-      - docker tag python:${TAG}${ARCH:+-$ARCH} ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH}
-      - docker push ${REGISTRY_URI}python:${TAG}${ARCH:+-$ARCH}
+      - docker build -t python:${TAG} --build-arg CPU_COUNT="-j ${CPU_COUNT}" -f Dockerfile.${VERSION} .
+      - docker tag python:${TAG} ${REGISTRY_URI}python:${TAG}
+      - docker push ${REGISTRY_URI}python:${TAG}
 
     finally:
       - rm -rfv ~/.docker

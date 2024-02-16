@@ -1,6 +1,6 @@
 ﻿ARG ARCH=
 ARG BASE_TAG=minimal
-ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}${ARCH}
+ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}
 ARG PY_VERSION=3.10.13
 
 FROM $BASE_IMAGE as updates

@@ -1,6 +1,6 @@
 ﻿ARG ARCH=
 ARG BASE_TAG=minimal
-ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}${ARCH}
+ARG BASE_IMAGE=public.ecr.aws/amazonlinux/amazonlinux:${BASE_TAG}
 FROM $BASE_IMAGE
 ENV PATH=$PATH:/usr/local/bin
 RUN yum upgrade -y; \
